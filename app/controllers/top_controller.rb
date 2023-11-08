@@ -1,3 +1,5 @@
+require 'bcrypt'
+
 class TopController < ApplicationController
   def main
     if session[:login_uid] != nil
@@ -8,17 +10,15 @@ class TopController < ApplicationController
   end
 
   def login
-    uid = params[:uid]
-    password = params[:password]
-
-    users = User.find_by(uid: params[:uid]) and User.find_by(pass: params[:pass])
-
-    if users && users.authenticate(password)
-      session[:login_uid] = uid
-      redirect_to top_main_path, notice: 'ログイン成功'
-    else
-      flash[:error] = 'ログイン失敗'
-      render 'login'
+    user = User.find_by(uid: params[:uid])
+    if user != nil
+      login_password = BCrypt::Password.new(user.pass)
+      if login_password == params[:pass]
+        session[:login_uid] = user.uid
+        redirect_to root_path
+      else
+        render 'login'
+      end
     end
   end
   
